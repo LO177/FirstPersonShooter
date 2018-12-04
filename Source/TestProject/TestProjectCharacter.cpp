@@ -163,8 +163,15 @@ void ATestProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 void ATestProjectCharacter::OnFire()
 {
+	/*if(Weapon->Empty ? "True" : "False"){
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("True"));
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("False"));
+	}*/
+	
 	// try and fire a projectile
-	if (Weapon->FireWeapon())//(ProjectileClass != NULL)
+	if (Weapon->reloadCurrValue == 0 && Weapon->FireWeapon() && Weapon->Empty == false)//(ProjectileClass != NULL)
 	{
 		// try and play a firing animation if specified
 		if (FireAnimation != NULL)

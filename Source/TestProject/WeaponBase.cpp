@@ -39,6 +39,10 @@ void AWeaponBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (reloadCurrValue > 0) {
+		reloadCurrValue--;
+	}
+
 }
 
 bool AWeaponBase::FireWeapon() {
@@ -46,7 +50,7 @@ bool AWeaponBase::FireWeapon() {
 
 	UWorld* const World = GetWorld();
 	if (World != NULL)
-	{			
+	{
 			//const FRotator SpawnRotation = GetControlRotation();
 			//FRotator SpawnRotation;
 			//if (customFramework) 
@@ -64,7 +68,7 @@ bool AWeaponBase::FireWeapon() {
 			//ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 			// spawn the projectile at the muzzle
-			if (MagSize != 0) {
+			if (MagSize != 0 && reloadCurrValue == 0) {
 				//World->SpawnActor<ATestProjectProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 
 				AActor* MyOwner = GetOwner();
@@ -97,27 +101,29 @@ bool AWeaponBase::FireWeapon() {
 
 				}
 
+				// try and play the sound if specified
+				if (FireSound != NULL)
+				{
+					UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+				}
+
+				GetWorld()->GetFirstPlayerController()->ClientPlayCameraShake(FireCamShake);
+
 				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Shot fired!"));
 				UE_LOG(LogClass, Log, TEXT("Shot fired!"));
 				MagSize--;
+				reloadCurrValue = reloadTime;
 			}
-		}
-	
 
-
-	// try and play the sound if specified
-	if (FireSound != NULL)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+			if (MagSize < 1) {
+				Empty = true;
+			}
 	}
-
-	WeaponFired();
-
-
 
 	return true;
 }
 
 void AWeaponBase::Reload() {
 	MagSize = 10;
+	Empty = false;
 }

@@ -39,12 +39,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 		int MagSize;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = FireRate)
+		int reloadTime;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 		USkeletalMeshComponent* MeshComp;
-
-	UFUNCTION(BlueprintImplementableEvent)
-		void WeaponFired();
 
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
 		TSubclassOf<class UCameraShake> FireCamShake;
@@ -59,5 +59,10 @@ public:
 
 	// Compiling the function Reload() of WeaponBase class, which resets mag size to what it was
 	void Reload();
+
+	bool Empty = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = FireRate)
+		int reloadCurrValue;
 	
 };
