@@ -49,6 +49,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
 		TSubclassOf<class UCameraShake> FireCamShake;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effect)
+		UParticleSystem* BeamEffect;
+
+	void CastRay(AActor* MyOwner);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -65,4 +70,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = FireRate)
 		int reloadCurrValue;
 	
+	int Damage = 35;
+
+	TSubclassOf<UDamageType> DamageType;
+
 };

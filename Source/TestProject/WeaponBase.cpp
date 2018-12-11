@@ -6,6 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "TestProjectProjectile.h"
 #include "DrawDebugHelpers.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "NPCBase.h"
 
 // Sets default values
 AWeaponBase::AWeaponBase()
@@ -74,31 +76,7 @@ bool AWeaponBase::FireWeapon() {
 				AActor* MyOwner = GetOwner();
 
 				if (MyOwner) {
-					FVector EyeLocation;
-					FRotator EyeRotation;
-
-					MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-
-					FVector TraceEnd = EyeLocation + (EyeRotation.Vector() * 10000);
-
-					FVector MuzzlePos = FP_MuzzleLocation->GetComponentLocation();
-
-					FCollisionQueryParams QueryParams;
-					QueryParams.AddIgnoredActor(MyOwner);
-					QueryParams.AddIgnoredActor(this);
-					QueryParams.bTraceComplex = true;
-
-					FHitResult hit;
-
-					if (GetWorld()->LineTraceSingleByChannel(hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams)) {
-						DrawDebugLine(GetWorld(), MuzzlePos, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
-						AActor* hitActor = hit.GetActor();
-					}
-					else 
-					{
-						DrawDebugLine(GetWorld(), MuzzlePos, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
-					}
-
+					CastRay(MyOwner);
 				}
 
 				// try and play the sound if specified
@@ -126,4 +104,54 @@ bool AWeaponBase::FireWeapon() {
 void AWeaponBase::Reload() {
 	MagSize = 10;
 	Empty = false;
+}
+
+void AWeaponBase::CastRay(AActor* MyOwner) {
+	FVector EyeLocation;
+	FRotator EyeRotation;
+
+	MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+	FVector TraceEnd = EyeLocation + (EyeRotation.Vector() * 10000);
+
+	FVector MuzzlePos = FP_MuzzleLocation->GetComponentLocation();
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(MyOwner);
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.bTraceComplex = true;
+
+	FHitResult hit;
+
+	if (GetWorld()->LineTraceSingleByChannel(hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams)) {
+		DrawDebugLine(GetWorld(), MuzzlePos, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
+		AActor* hitActor = hit.GetActor();
+
+		ANPCBase* npc = Cast<ANPCBase>(hitActor);
+
+		if (npc != nullptr)
+		{
+			if (npc->type != NULL && npc->type == 'n') {
+				
+				bool npcDeathState = npc->AdjustHealth(Damage);
+
+				if (npcDeathState) {
+					npc->ApplyDeathAnim();
+				}
+				else {
+					UGameplayStatics::ApplyDamage(hitActor, Damage, MyOwner->GetInstigatorController(), MyOwner, NULL);
+				}
+			}
+		}
+	}
+	else
+	{
+		DrawDebugLine(GetWorld(), MuzzlePos, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
+	}
+
+	if (BeamEffect) {
+		UParticleSystemComponent* BeamComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamEffect, MeshComp->GetSocketLocation("Muzzle"));
+
+		BeamComp->SetVectorParameter("BeamEnd", (hit.Actor != NULL) ? hit.ImpactPoint : TraceEnd);
+	}
 }
